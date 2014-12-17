@@ -15,7 +15,6 @@ Copyright (C) 2009-2013, The Perl Foundation.
 
 /* Cache of Parrot type IDs and some strings. */
 static INTVAL smo_id            = 0;
-static INTVAL qrpa_id           = 0;
 static STRING *ACCEPTS          = NULL;
 static STRING *HOW              = NULL;
 static STRING *DO_str           = NULL;
@@ -61,7 +60,6 @@ static void setup_binder_statics(PARROT_INTERP) {
     INSTANTIATE_GENERIC_str = Parrot_str_new_constant(interp, "instantiate_generic");
     
     smo_id  = Parrot_pmc_get_type_str(interp, Parrot_str_new(interp, "SixModelObject", 0));
-    qrpa_id = Parrot_pmc_get_type_str(interp, Parrot_str_new(interp, "QRPA", 0));
 }
 
 
@@ -70,8 +68,7 @@ INTVAL Rakudo_smo_id(void) { return smo_id; }
 
 /* Checks that a PMC is a native list object */
 INTVAL Rakudo_isnqplist(PMC *pmc) {
-    return (INTVAL)(pmc->vtable->base_type == qrpa_id
-                    || pmc->vtable->base_type == enum_class_ResizablePMCArray);
+    return (INTVAL)(pmc->vtable->base_type == enum_class_ResizablePMCArray);
 }
 
 

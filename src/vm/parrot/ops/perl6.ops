@@ -26,7 +26,6 @@ BEGIN_OPS_PREAMBLE
 
 /* Cache some stuff for fast access. */
 static INTVAL smo_id = 0;
-static INTVAL qrpa_id = 0;
 
 static PMC *build_sig_object(PARROT_INTERP, ARGIN_NULLOK(PMC *signature), ARGIN(const char *sig), ...)
 {
@@ -100,7 +99,6 @@ static PMC *run_leave_phasers(PARROT_INTERP, PMC *ctx, PMC *perl6_code, PMC *res
     Rakudo_Code *code;
     PMC *phasers, *leave_phasers, *post_phasers;
     PMC *oldctx;
-    int i, n;
     Parrot_runloop jump_point;
     
     /* Don't run any phasers if we failed while checking pre-conditions. */
@@ -122,7 +120,8 @@ static PMC *run_leave_phasers(PARROT_INTERP, PMC *ctx, PMC *perl6_code, PMC *res
     Parrot_pcc_set_context(interp, ctx);
     
     if (!PMC_IS_NULL(leave_phasers)) {
-        n = VTABLE_elements(interp, leave_phasers);
+        register int i;
+        const int n = VTABLE_elements(interp, leave_phasers);
         for (i = 0; i < n; i++) {
             int runloop_id = interp->current_runloop_id;
             if (setjmp(jump_point.resume)) {
@@ -144,8 +143,9 @@ static PMC *run_leave_phasers(PARROT_INTERP, PMC *ctx, PMC *perl6_code, PMC *res
     }
     
     if (!PMC_IS_NULL(post_phasers)) {
+        register int i;
         INTVAL failed_a_post = 0;
-        n = VTABLE_elements(interp, post_phasers);
+        const int n = VTABLE_elements(interp, post_phasers);
         for (i = 0; i < n; i++) {
             int runloop_id = interp->current_runloop_id;
             if (setjmp(jump_point.resume)) {
@@ -285,7 +285,6 @@ inline op rakudo_dynop_setup() :base_core {
     if (!initialized_ops) {
         /* Get 6model object type ID. */
         smo_id = Parrot_pmc_get_type_str(interp, Parrot_str_new_constant(interp, "SixModelObject"));
-        qrpa_id = Parrot_pmc_get_type_str(interp, Parrot_str_new_constant(interp, "QRPA"));
         
         /* Register Rakudo scalar container configuration. */
         Rakudo_cont_register(interp);
@@ -1228,16 +1227,16 @@ inline op perl6_iter_from_rpa(out PMC, in PMC, in PMC) :base_core {
 =item perl6_list_from_rpa(out PMC, in PMC, in PMC, in PMC)
 
 Creates a lazy Perl 6 List object of type $3 from the RPA
-in $2 and with flattening $4.
+in $2 and with flattening $4.0
 
 =cut
 
 */
 inline op perl6_list_from_rpa(out PMC, in PMC, in PMC, in PMC) :base_core {
     PMC *items = $2;
-    if (items->vtable->base_type != qrpa_id) {
-        /* Switch aggregate to be a QRPA */
-        PMC *t = Parrot_pmc_new(interp, qrpa_id);
+    if (items->vtable->base_type != enum_class_ResizablePMCArray) {
+        /* Switch aggregate to be a RPA */
+        PMC *t = Parrot_pmc_new(interp, enum_class_ResizablePMCArray);
         VTABLE_splice(interp, t, items, 0, 0);
         items = t;
     }
@@ -1258,8 +1257,8 @@ inline op perl6_listitems(out PMC, in PMC) :base_core {
     PMC *items = VTABLE_get_attr_keyed(interp, $2, List,
                      Parrot_str_new_constant(interp, "$!items"));
     INTVAL type = items->vtable->base_type;
-    if (type != qrpa_id && type != enum_class_ResizablePMCArray) {
-        items = Parrot_pmc_new(interp, qrpa_id);
+    if (type != enum_class_ResizablePMCArray) {
+        items = Parrot_pmc_new(interp, enum_class_ResizablePMCArray);
         VTABLE_set_attr_keyed(interp, $2, List,
                      Parrot_str_new_constant(interp, "$!items"), items);
     }

@@ -66,7 +66,7 @@ my class MapIter is Iterator {
                 rpa      = find_lex '$rpa'
                 MapIter = find_lex 'MapIter'
                 items    = getattribute self, MapIter, '$!items'
-                args     = new 'QRPA'
+                args     = new 'ResizablePMCArray'
                 block    = find_lex '$block'
                 handler  = root_new ['parrot';'ExceptionHandler']
                 NEXT     = find_lex '$NEXT'
