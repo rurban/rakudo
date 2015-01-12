@@ -24,6 +24,12 @@ BEGIN_OPS_PREAMBLE
 #  include <unicode/uchar.h>
 #endif
 
+/* For now use this hack to detect the deprecation. Later check the PARROT version */
+/* #if PARROT_MAJOR_VERSION >= 7 */
+#ifdef ASSERT_ARGS_Parrot_runloop_free_jump_point
+#  define free_runloop_jump_point Parrot_runloop_free_jump_point
+#endif
+
 /* Cache some stuff for fast access. */
 static INTVAL smo_id = 0;
 
